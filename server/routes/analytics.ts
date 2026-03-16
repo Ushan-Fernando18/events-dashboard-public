@@ -187,8 +187,20 @@ export async function analyticsHandler(req: Request, res: Response) {
 
     // Event counts
     const registerNowCount = (registerNow.rows || []).reduce((s, r) => s + Number(r.metricValues?.[0]?.value || 0), 0)
-    const registerNowSources = parseRows(registerNow)
-      .map(r => ({ name: r.dimension || '(direct)', sessions: r.value }))
+    const rawRegisterNowSources = parseRows(registerNow).map(r => {
+      let name = (r.dimension || '(direct)').toLowerCase()
+      if (name.includes('facebook')) name = 'facebook'
+      if (name.includes('instagram')) name = 'instagram'
+      return { name, sessions: r.value }
+    })
+    
+    const aggregatedSources: Record<string, number> = {}
+    for (const source of rawRegisterNowSources) {
+      aggregatedSources[source.name] = (aggregatedSources[source.name] || 0) + source.sessions
+    }
+    
+    const registerNowSources = Object.entries(aggregatedSources)
+      .map(([name, sessions]) => ({ name, sessions }))
       .sort((a, b) => b.sessions - a.sessions)
     const callNowCount = isEventsPage
       ? (callNow.rows || []).reduce((s, r) => s + Number(r.metricValues?.[0]?.value || 0), 0)
