@@ -71,3 +71,15 @@ export function MediumsTable({ data }: { data: RowData[] }) {
     </div>
   )
 }
+
+export function RegisterNowSourceTable({ data }: { data: RowData[] }) {
+  return (
+    <div className="glass-solid rounded-xl p-5 flex flex-col min-h-[250px] max-h-[350px]">
+      <h3 className="text-sm font-semibold text-foreground mb-4 shrink-0">Register Now by Source</h3>
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        <Bar rows={data} colorMap={SOURCE_COLORS} />
+      </div>
+    </div>
+  )
+}
+

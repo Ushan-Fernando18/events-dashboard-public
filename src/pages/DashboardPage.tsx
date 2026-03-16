@@ -6,7 +6,7 @@ import { formatNumber, formatDuration } from '../lib/formatters'
 import StatCard from '../components/dashboard/KpiCard'
 import CountriesTable from '../components/dashboard/CountriesTable'
 import CitiesTable from '../components/dashboard/CitiesTable'
-import { SourcesTable, MediumsTable } from '../components/dashboard/SourcesTable'
+import { SourcesTable, MediumsTable, RegisterNowSourceTable } from '../components/dashboard/SourcesTable'
 import DateRangePicker, { PRESETS, type DateRange } from '../components/dashboard/DateRangePicker'
 
 const TABS: { id: PageType; label: string; url: string }[] = [
@@ -171,6 +171,15 @@ export default function DashboardPage() {
                 ? <MediumsTable data={data.mediums} />
                 : <EmptyWidget title="Events by Medium" />}
             </div>
+
+            {/* Register Now Submissions by Source */}
+            {isEventsPage && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.registerNowSources && data.registerNowSources.length > 0
+                  ? <RegisterNowSourceTable data={data.registerNowSources} />
+                  : <EmptyWidget title="Register Now by Source" />}
+              </div>
+            )}
 
             <p className="text-center text-xs text-muted-foreground pb-4">
               {activeTabInfo.label} · {dateRange.label.toLowerCase()} · {dateRange.startDate} → {dateRange.endDate}

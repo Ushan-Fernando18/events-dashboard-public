@@ -10,6 +10,7 @@ export interface AnalyticsData {
   sources: { name: string; sessions: number }[]
   mediums: { name: string; sessions: number }[]
   registerNowCount: number
+  registerNowSources: { name: string; sessions: number }[]
   callNowCount?: number
 }
 

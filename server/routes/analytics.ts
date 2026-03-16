@@ -119,7 +119,7 @@ export async function analyticsHandler(req: Request, res: Response) {
       }),
       // 6. Register Now submissions — eventName=submit, label=2026_register_online_expo
       runReport(propertyId, access_token, {
-        dimensions: [{ name: 'eventName' }],
+        dimensions: [{ name: 'sessionSource' }],
         metrics: [{ name: 'eventCount' }],
         dateRanges: [dateRange],
         dimensionFilter: {
@@ -187,11 +187,14 @@ export async function analyticsHandler(req: Request, res: Response) {
 
     // Event counts
     const registerNowCount = (registerNow.rows || []).reduce((s, r) => s + Number(r.metricValues?.[0]?.value || 0), 0)
+    const registerNowSources = parseRows(registerNow)
+      .map(r => ({ name: r.dimension || '(direct)', sessions: r.value }))
+      .sort((a, b) => b.sessions - a.sessions)
     const callNowCount = isEventsPage
       ? (callNow.rows || []).reduce((s, r) => s + Number(r.metricValues?.[0]?.value || 0), 0)
       : undefined
 
-    res.json({ kpis, countries: countryData, cities: cityData, sources: sourceData, mediums: mediumData, registerNowCount, callNowCount })
+    res.json({ kpis, countries: countryData, cities: cityData, sources: sourceData, mediums: mediumData, registerNowCount, registerNowSources, callNowCount })
   } catch (err) {
     console.error('Analytics error:', err)
     res.status(500).json({ error: 'Failed to fetch analytics data' })
