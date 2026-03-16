@@ -48,8 +48,8 @@ export default function DashboardPage() {
               className="h-8 w-auto shrink-0"
             />
             <div className="hidden sm:block">
-              <h1 className="text-sm font-bold text-foreground leading-tight">Apartment Finder</h1>
-              <p className="text-[10px] text-muted-foreground">Page Statistics</p>
+              <h1 className="text-sm font-bold text-foreground leading-tight">Events Page</h1>
+              <p className="text-[10px] text-muted-foreground">Statistics</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
