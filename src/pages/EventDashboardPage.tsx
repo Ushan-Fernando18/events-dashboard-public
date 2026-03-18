@@ -129,13 +129,21 @@ export default function EventDashboardPage() {
                 <StatCard title="Sessions" value={formatNumber(data.kpis.sessions)} icon={Activity} className="gradient-border-premium shadow-xl" />
               </div>
               <div className="transform hover:scale-[1.02] transition-transform duration-300">
-                <StatCard 
-                  title="Active Users" 
-                  value={formatNumber(data.kpis.totalUsers24h)} 
-                  // subtitle="Last 24 Hours"
-                  icon={RefreshCw} 
-                  className="gradient-border-premium shadow-xl" 
-                />
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-emerald-500 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-200"></div>
+                  <div className="relative rounded-lg p-3 gradient-border-premium shadow-xl flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-600 mb-0.5">Active Users</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-3xl font-bold tracking-tight text-slate-900">{formatNumber(data.kpis.totalUsers24h)}</p>
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
