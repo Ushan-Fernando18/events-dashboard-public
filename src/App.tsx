@@ -3,6 +3,8 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AuthGuard from './components/AuthGuard'
 import AuthCallback from './components/AuthCallback'
+import EventDashboardPage from './pages/EventDashboardPage'
+import DashboardSwitcher from './components/DashboardSwitcher'
 
 export default function App() {
   return (
@@ -18,8 +20,17 @@ export default function App() {
             </AuthGuard>
           }
         />
+        <Route
+          path="/event"
+          element={
+            <AuthGuard>
+              <EventDashboardPage />
+            </AuthGuard>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <DashboardSwitcher />
     </BrowserRouter>
   )
 }

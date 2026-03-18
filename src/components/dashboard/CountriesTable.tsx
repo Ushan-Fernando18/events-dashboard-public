@@ -1,12 +1,14 @@
+import { cn } from '../../lib/utils'
+
 interface CountryData {
   country: string
   views: number
   percentage: number
 }
 
-export default function CountriesTable({ data }: { data: CountryData[] }) {
+export default function CountriesTable({ data, className }: { data: CountryData[], className?: string }) {
   return (
-    <div className="glass-solid rounded-xl p-5 h-full">
+    <div className={cn("glass-solid rounded-xl p-5 h-full", className)}>
       <h3 className="text-sm font-semibold text-foreground mb-4">Views by Country</h3>
       <div className="space-y-3">
         {data.map((item, i) => (
@@ -20,7 +22,7 @@ export default function CountriesTable({ data }: { data: CountryData[] }) {
               <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${item.percentage}%`, background: 'linear-gradient(90deg, hsl(145 72% 32%), hsl(160 60% 42%))' }}
+                  style={{ width: `${item.percentage}%`, background: 'linear-gradient(90deg, #8B20BB, #1E3A8A)' }}
                 />
               </div>
             </div>

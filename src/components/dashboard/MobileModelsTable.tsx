@@ -29,7 +29,7 @@ export default function MobileModelsTable({ data }: Props) {
                   className="h-full rounded-full"
                   style={{
                     width: `${(item.sessions / max) * 100}%`,
-                    background: 'hsl(221 83% 63%)',
+                    background: '#8B20BB',
                     opacity: 0.7 + 0.3 * (1 - i / data.length),
                   }}
                 />

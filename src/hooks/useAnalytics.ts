@@ -4,7 +4,13 @@ import { useAuth } from './useAuth'
 export type PageType = 'events' | 'virtual-events'
 
 export interface AnalyticsData {
-  kpis: { sessions: number; pageViews: number; avgSessionDuration: number }
+  kpis: { 
+    sessions: number; 
+    pageViews: number; 
+    avgSessionDuration: number; 
+    realtimeUsers: number;
+    totalUsers24h: number;
+  }
   countries: { country: string; views: number; percentage: number }[]
   cities: { city: string; views: number; percentage: number }[]
   sources: { name: string; sessions: number }[]

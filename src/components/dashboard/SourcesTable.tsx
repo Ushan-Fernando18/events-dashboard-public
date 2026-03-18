@@ -1,27 +1,27 @@
 interface RowData { name: string; sessions: number }
 
 const SOURCE_COLORS: Record<string, string> = {
-  google: 'hsl(145 72% 32%)',
-  facebook: 'hsl(220 80% 55%)',
-  instagram: 'hsl(300 60% 55%)',
-  '(direct)': 'hsl(160 55% 45%)',
-  direct: 'hsl(160 55% 45%)',
-  twitter: 'hsl(200 80% 55%)',
-  linkedin: 'hsl(210 80% 50%)',
-  email: 'hsl(38 85% 55%)',
+  google: '#8B20BB',
+  facebook: '#1E3A8A',
+  instagram: '#E1306C',
+  '(direct)': '#4F46E5',
+  direct: '#4F46E5',
+  twitter: '#1DA1F2',
+  linkedin: '#0077B5',
+  email: '#7C3AED',
 }
 const MEDIUM_COLORS: Record<string, string> = {
-  organic: 'hsl(145 72% 32%)',
-  cpc: 'hsl(220 80% 55%)',
-  referral: 'hsl(38 85% 55%)',
-  email: 'hsl(25 80% 55%)',
-  social: 'hsl(300 60% 55%)',
-  '(none)': 'hsl(160 40% 50%)',
-  none: 'hsl(160 40% 50%)',
+  organic: '#8B20BB',
+  cpc: '#1E3A8A',
+  referral: '#4F46E5',
+  email: '#7C3AED',
+  social: '#9333EA',
+  '(none)': '#64748B',
+  none: '#64748B',
 }
 
 function getColor(name: string, map: Record<string, string>) {
-  return map[name.toLowerCase()] || 'hsl(145 55% 42%)'
+  return map[name.toLowerCase()] || '#8B20BB'
 }
 
 function Bar({ rows, colorMap }: { rows: RowData[]; colorMap: Record<string, string> }) {

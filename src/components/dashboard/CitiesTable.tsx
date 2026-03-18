@@ -19,13 +19,13 @@ export default function CitiesTable({ data }: { data: CityData[] }) {
             <span
               className="text-xs font-bold w-5 h-5 rounded flex items-center justify-center shrink-0"
               style={{
-                background: i < 3 ? 'hsl(145 72% 32% / 0.15)' : 'transparent',
-                color: i < 3 ? 'hsl(145 72% 32%)' : 'hsl(var(--muted-foreground))',
+                background: i < 3 ? 'rgba(139, 32, 187, 0.15)' : 'transparent',
+                color: i < 3 ? '#8B20BB' : 'hsl(var(--muted-foreground))',
               }}
             >{i + 1}</span>
             <span className="text-xs font-medium text-foreground flex-1 truncate">{item.city === '(not set)' ? 'Unknown' : item.city}</span>
             <div className="w-16 h-1 rounded-full bg-muted overflow-hidden shrink-0">
-              <div className="h-full rounded-full" style={{ width: `${(item.views / max) * 100}%`, background: 'hsl(145 72% 32%)' }} />
+              <div className="h-full rounded-full" style={{ width: `${(item.views / max) * 100}%`, background: '#8B20BB' }} />
             </div>
             <span className="text-xs text-muted-foreground w-14 text-right shrink-0">{item.views.toLocaleString()}</span>
           </div>

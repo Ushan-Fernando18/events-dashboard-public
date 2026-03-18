@@ -13,9 +13,27 @@ interface GA4ReportResponse {
   error?: { status: string; message: string }
 }
 
+interface RealtimeReportRequest {
+  dimensions?: { name: string }[]
+  metrics: { name: string }[]
+  dimensionFilter?: object
+}
+
 async function runReport(propertyId: string, accessToken: string, body: ReportRequest): Promise<GA4ReportResponse> {
   const res = await fetch(
     `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  )
+  return res.json() as Promise<GA4ReportResponse>
+}
+
+async function runRealtimeReport(propertyId: string, accessToken: string, body: RealtimeReportRequest): Promise<GA4ReportResponse> {
+  const res = await fetch(
+    `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runRealtimeReport`,
     {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -68,10 +86,20 @@ export async function analyticsHandler(req: Request, res: Response) {
   if (!propertyId) { res.status(500).json({ error: 'GA4_PROPERTY_ID not configured' }); return }
   if (!access_token) { res.status(401).json({ needsAuth: true }); return }
 
-  const pagePath = pageType === 'virtual-events' ? '/events-virtual' : '/events/'
-  const pFilter = pageFilter(pagePath)
-  const dateRange = { startDate, endDate }
+  // Base filter for the events page (matches both 'event/' and 'events/')
   const isEventsPage = pageType === 'events'
+  const pFilter = isEventsPage 
+    ? {
+        orGroup: {
+          expressions: [
+            pageFilter('/event/'),
+            pageFilter('/events/')
+          ]
+        }
+      }
+    : pageFilter('/events-virtual')
+    
+  const dateRange = { startDate, endDate }
 
   try {
     const reports = await Promise.all([
@@ -147,13 +175,38 @@ export async function analyticsHandler(req: Request, res: Response) {
           },
         },
       }) : Promise.resolve({ rows: [] }),
+      // 8. Users in last 24h
+      runReport(propertyId, access_token, {
+        metrics: [{ name: 'totalUsers' }],
+        dateRanges: [{ startDate: '1daysAgo', endDate: 'today' }],
+        dimensionFilter: {
+          filter: {
+            fieldName: 'pagePath',
+            stringFilter: { matchType: 'CONTAINS', value: 'events-virtual', caseSensitive: false },
+          },
+        },
+      }),
+      // 9. Realtime Users (Last 30m)
+      runRealtimeReport(propertyId, access_token, {
+        metrics: [{ name: 'activeUsers' }],
+        dimensionFilter: {
+          filter: {
+            fieldName: 'pagePath',
+            stringFilter: { matchType: 'CONTAINS', value: 'events-virtual', caseSensitive: false },
+          },
+        },
+      }),
     ])
 
-    const [mainMetrics, countries, cities, sources, mediums, registerNow, callNow] = reports
+    const [mainMetrics, countries, cities, sources, mediums, registerNow, callNow, users24h, realtime] = reports
 
     if (mainMetrics.error?.status === 'UNAUTHENTICATED' || mainMetrics.error?.status === 'PERMISSION_DENIED') {
       res.status(401).json({ needsAuth: true }); return
     }
+
+    // Users (24h and Realtime)
+    const totalUsers24h = Number(users24h.rows?.[0]?.metricValues?.[0]?.value || 0)
+    const realtimeUsers = Number(realtime.rows?.[0]?.metricValues?.[0]?.value || 0)
 
     // KPIs
     const kpiRow = mainMetrics.rows?.[0]?.metricValues || []
@@ -161,6 +214,8 @@ export async function analyticsHandler(req: Request, res: Response) {
       sessions: Number(kpiRow[0]?.value || 0),
       pageViews: Number(kpiRow[1]?.value || 0),
       avgSessionDuration: Number(kpiRow[2]?.value || 0),
+      realtimeUsers,
+      totalUsers24h
     }
 
     // Countries
