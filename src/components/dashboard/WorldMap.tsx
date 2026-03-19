@@ -1,5 +1,5 @@
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, Graticule } from 'react-simple-maps';
-import { scaleSqrt, scaleLinear } from 'd3-scale';
+import { scaleSqrt } from 'd3-scale';
 import { Plus, Minus } from 'lucide-react';
 import { useState, useMemo } from 'react';
 

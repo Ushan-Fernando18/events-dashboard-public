@@ -185,7 +185,7 @@ export default function EventDashboardPage() {
                   </div>
 
                   {/* Sidebar Overlay - KPIs & Views Table */}
-                  <div className="absolute top-6 left-6 z-10 flex flex-col gap-4 w-[420px] max-h-[calc(100%-3rem)] pointer-events-none">
+                  <div className="absolute top-4 left-4 z-10 flex flex-col gap-2.5 w-[420px] max-h-[calc(100%-2rem)] pointer-events-none">
                     {/* KPI Box */}
                     <div className="flex shrink-0 pointer-events-auto">
                       <div className="w-full bg-white/95 backdrop-blur-md border border-white/20 p-2 rounded-xl shadow-2xl flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all duration-300">
