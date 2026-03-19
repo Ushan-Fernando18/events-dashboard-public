@@ -44,14 +44,10 @@ export default function WorldMap({ data }: Props) {
   const radiusScale = useMemo(() => {
     return scaleSqrt()
       .domain([0, maxViews])
-      .range([0, 30]); // Reduced from 45 to prevent overlap
+      .range([0, 22]); // Tightened for a more professional look
   }, [maxViews]);
 
-  const colorScale = useMemo(() => {
-    return scaleLinear<string>()
-      .domain([0, maxViews])
-      .range(["#cbd5e1", "#3b82f6"]);
-  }, [maxViews]);
+
 
   const dataLookup = useMemo(() => {
     const lookup: Record<string, number> = {};
@@ -133,7 +129,7 @@ export default function WorldMap({ data }: Props) {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={hasData ? colorScale(views) : "rgba(255,255,255,0.02)"} 
+                    fill={hasData ? "#FFFFFF" : "rgba(255,255,255,0.02)"} 
                     stroke="rgba(255,255,255,0.08)"
                     strokeWidth={0.5}
                     style={{
@@ -164,38 +160,19 @@ export default function WorldMap({ data }: Props) {
                   onMouseEnter={() => setHoveredCountry(d.country)}
                   onMouseLeave={() => setHoveredCountry(null)}
                 >
-                  {/* Outer Ring / Glow */}
-                  <circle
-                    r={effectiveRadius * 2.5}
-                    fill="#3B82F6"
-                    fillOpacity={isHovered ? 0.15 : 0.05}
-                    className="transition-all duration-300"
-                  />
-                  {/* Interactive Ring */}
+                  {/* Minimal Subtle Glow with Pulse */}
                   <circle
                     r={effectiveRadius * 1.5}
-                    fill="#2563EB"
-                    fillOpacity={isHovered ? 0.25 : 0.12}
-                    className="transition-all duration-300"
-                  />
-                  {/* Main Bubble Border */}
-                  <circle
-                    r={effectiveRadius + 1.5}
-                    fill="transparent"
-                    stroke={isHovered ? "#3B82F6" : "#1D4ED8"}
-                    strokeWidth={1}
-                    strokeOpacity={isHovered ? 0.5 : 0.2}
-                    className="transition-all duration-300"
+                    fill="#1e40af"
+                    fillOpacity={isHovered ? 0.4 : 0.25}
+                    className="animate-pulse duration-[1500ms]"
                   />
                   {/* Main Bubble core */}
                   <circle
                     r={effectiveRadius}
                     fill={isHovered ? "#3b82f6" : "#2563EB"}
                     fillOpacity={0.9}
-                    stroke="#FFFFFF"
-                    strokeWidth={1}
-                    strokeOpacity={0.6}
-                    className="transition-all duration-300 shadow-xl"
+                    className="transition-all duration-300"
                   />
                   {/* Shine effect */}
                   <circle
@@ -203,7 +180,7 @@ export default function WorldMap({ data }: Props) {
                     cx={-effectiveRadius * 0.25}
                     cy={-effectiveRadius * 0.25}
                     fill="#FFFFFF"
-                    fillOpacity={0.3}
+                    fillOpacity={0.1}
                   />
                   
                  {effectiveRadius >= 8 && (

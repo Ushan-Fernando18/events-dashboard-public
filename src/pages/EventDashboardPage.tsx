@@ -76,7 +76,7 @@ export default function EventDashboardPage() {
                <span className="text-[12px] font-bold text-red-600 uppercase tracking-[0.2em] whitespace-nowrap">Live Now</span>
              </div>
              <div className="flex items-center gap-3">
-               <span className="text-[12px] font-bold text-green-600 uppercase tracking-widest whitespace-nowrap">Active Users</span>
+               <span className="text-[12px] font-bold text-green-600 uppercase tracking-widest whitespace-nowrap">Active Visitors</span>
                <span className="text-2xl font-black text-black/90 leading-none tabular-nums tracking-tighter">
                  {data ? formatNumber(data.kpis.totalUsers24h) : '...'}
                </span>
@@ -191,7 +191,7 @@ export default function EventDashboardPage() {
                       <div className="w-full bg-white/95 backdrop-blur-md border border-white/20 p-2 rounded-xl shadow-2xl flex flex-col items-center justify-center transform hover:scale-[1.02] transition-all duration-300">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Eye className="h-4 w-4 text-blue-500" />
-                          <span className="text-[14px] font-black text-slate-500 uppercase tracking-widest">Website Visitors</span>
+                          <span className="text-[14px] font-black text-slate-500 uppercase tracking-widest">Total Virtual Event Visitors</span>
                         </div>
                         <span className="text-2xl font-black text-slate-900 tracking-tighter tabular-nums">{formatNumber(data.kpis.pageViews)}</span>
                       </div>
