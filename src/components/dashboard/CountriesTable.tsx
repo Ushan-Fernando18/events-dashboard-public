@@ -22,15 +22,26 @@ const countryToIso: Record<string, string> = {
   "Singapore": "sg",
   "Italy": "it",
   "France": "fr",
-  "Germany": "de"
+  "Germany": "de",
+  "Japan": "jp",
+  "New Zealand": "nz",
+  "Bahrain": "bh",
+  "Netherlands": "nl",
+  "Switzerland": "ch",
+  "South Korea": "kr",
+  "Malaysia": "my",
+  "Bangladesh": "bd",
+  "Pakistan": "pk"
 }
 
 export default function CountriesTable({ data, className }: { data: CountryData[], className?: string }) {
+  const top15 = data.slice(0, 15);
+  
   return (
-    <div className={cn("glass-solid rounded-xl p-5 h-full", className)}>
-      <h3 className="text-sm font-semibold text-foreground mb-4">Views by Country</h3>
-      <div className="space-y-3">
-        {data.map((item, i) => {
+    <div className={cn("glass-solid rounded-xl p-5 h-full flex flex-col", className)}>
+      <h3 className="text-sm font-semibold text-foreground mb-4">Visitors by Country</h3>
+      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[350px] pr-1">
+        {top15.map((item, i) => {
           const isoCode = countryToIso[item.country]
           return (
             <div key={item.country} className="flex items-center gap-3">

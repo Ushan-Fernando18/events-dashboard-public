@@ -156,10 +156,10 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {data.countries.length > 0
                 ? <CountriesTable data={data.countries} />
-                : <EmptyWidget title="Views by Country" />}
+                : <EmptyWidget title="Visitors by Country" />}
               {data.cities.length > 0
                 ? <CitiesTable data={data.cities} />
-                : <EmptyWidget title="Views by City" />}
+                : <EmptyWidget title="Visitors by City" />}
             </div>
 
             {/* Source + Medium */}

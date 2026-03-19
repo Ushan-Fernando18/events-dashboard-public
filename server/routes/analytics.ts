@@ -118,7 +118,7 @@ export async function analyticsHandler(req: Request, res: Response) {
         dimensions: [{ name: 'country' }],
         metrics: [{ name: 'screenPageViews' }],
         dateRanges: [dateRange],
-        limit: 10,
+        limit: 15,
         dimensionFilter: pFilter,
       }),
       // 3. Cities

@@ -1,5 +1,5 @@
-import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
-import { scaleLinear } from 'd3-scale';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, Graticule } from 'react-simple-maps';
+import { scaleSqrt, scaleLinear } from 'd3-scale';
 import { Plus, Minus } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -13,14 +13,14 @@ interface Props {
   }[];
 }
 
-// Helper to map GA4 country names to standard Map names if needed
 const countryNameMap: Record<string, string> = {
   "United States": "United States of America",
   "United Kingdom": "United Kingdom",
 };
 
 export default function WorldMap({ data }: Props) {
-  const [position, setPosition] = useState({ coordinates: [0, 15] as [number, number], zoom: 1 });
+  const [position, setPosition] = useState({ coordinates: [20, 10] as [number, number], zoom: 1.2 });
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const handleZoomIn = () => {
     if (position.zoom >= 8) return;
@@ -28,25 +28,31 @@ export default function WorldMap({ data }: Props) {
   };
 
   const handleZoomOut = () => {
-    if (position.zoom <= 1) return;
-    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+    if (position.zoom <= 0.5) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.2 }));
   };
 
   const handleMoveEnd = (newPosition: { coordinates: [number, number]; zoom: number }) => {
     setPosition(newPosition);
   };
-  // Find max views to scale the heat map colors
+
   const maxViews = useMemo(() => {
     if (!data || data.length === 0) return 1;
     return Math.max(...data.map(d => d.views));
   }, [data]);
 
-  // Create a greenish color scale with better contrast
-  const colorScale = scaleLinear<string>()
-    .domain([0, maxViews])
-    .range(["#EBEBFF", "#8B20BB"]); // Soft purple to vibrant purple
+  const radiusScale = useMemo(() => {
+    return scaleSqrt()
+      .domain([0, maxViews])
+      .range([0, 30]); // Reduced from 45 to prevent overlap
+  }, [maxViews]);
 
-  // Quick lookup dictionary for faster rendering
+  const colorScale = useMemo(() => {
+    return scaleLinear<string>()
+      .domain([0, maxViews])
+      .range(["#cbd5e1", "#3b82f6"]);
+  }, [maxViews]);
+
   const dataLookup = useMemo(() => {
     const lookup: Record<string, number> = {};
     data.forEach((d) => {
@@ -56,30 +62,57 @@ export default function WorldMap({ data }: Props) {
     return lookup;
   }, [data]);
 
+  const countryCoords: Record<string, [number, number]> = {
+    "Sri Lanka": [80.7718, 7.8731],
+    "United Kingdom": [-3.4359, 54.3781],
+    "United States of America": [-95.7129, 37.0902],
+    "United States": [-95.7129, 37.0902],
+    "Australia": [133.7751, -25.2744],
+    "Canada": [-106.3468, 56.1304],
+    "United Arab Emirates": [54.3739, 24.4539],
+    "Saudi Arabia": [45.0792, 23.8859],
+    "Qatar": [51.1839, 25.3548],
+    "Italy": [12.5674, 41.8719],
+    "India": [78.9629, 20.5937],
+    "Maldives": [73.2207, 3.2028],
+    "Oman": [55.9233, 21.5126],
+    "Kuwait": [47.4818, 29.3117],
+    "Singapore": [103.8198, 1.3521],
+    "Germany": [10.4515, 51.1657],
+    "France": [2.2137, 46.2276],
+    "New Zealand": [174.886, -40.9006],
+    "Bahrain": [50.586, 26.0667],
+    "Netherlands": [5.2913, 52.1326],
+    "Switzerland": [8.2275, 46.8182],
+    "Japan": [138.2529, 36.2048],
+    "South Korea": [127.7669, 35.9078],
+    "Malaysia": [101.9758, 4.2105],
+    "Bangladesh": [90.3563, 23.6850],
+    "Pakistan": [69.3451, 30.3753]
+  };
+
   return (
-    <div className="w-full h-full flex flex-col relative group/map">
-      {/* Zoom Controls - Top Right */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+    <div className="w-full h-full flex flex-col relative group/map overflow-hidden">
+      {/* Small Zoom Controls */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col gap-1.5 translate-x-1">
         <button
           onClick={handleZoomIn}
-          className="p-2 rounded-lg bg-white/40 dark:bg-background/80 backdrop-blur-md border border-white/40 dark:border-border/50 text-foreground hover:bg-primary/20 hover:border-primary/50 transition-all shadow-lg"
-          title="Zoom In"
+          className="p-1.5 rounded-md bg-white/80 dark:bg-background/80 backdrop-blur-md border border-slate-200 text-slate-600 hover:bg-blue-50 transition-all shadow-md"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={handleZoomOut}
-          className="p-2 rounded-lg bg-white/40 dark:bg-background/80 backdrop-blur-md border border-white/40 dark:border-border/50 text-foreground hover:bg-primary/20 hover:border-primary/50 transition-all shadow-lg"
-          title="Zoom Out"
+          className="p-1.5 rounded-md bg-white/80 dark:bg-background/80 backdrop-blur-md border border-slate-200 text-slate-600 hover:bg-blue-50 transition-all shadow-md"
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="h-3.5 w-3.5" />
         </button>
       </div>
 
       <div className="flex-1 w-full min-h-0 relative">
         <ComposableMap
           projectionConfig={{
-            scale: 200,
+            scale: 180,
           }}
           style={{ width: "100%", height: "100%" }}
         >
@@ -88,6 +121,7 @@ export default function WorldMap({ data }: Props) {
             center={position.coordinates}
             onMoveEnd={handleMoveEnd}
           >
+            <Graticule stroke="rgba(255,255,255,0.05)" strokeWidth={0.5} />
           <Geographies geography={geoUrl}>
             {({ geographies }) =>
               geographies.map((geo) => {
@@ -99,12 +133,12 @@ export default function WorldMap({ data }: Props) {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={hasData ? colorScale(views) : "#F8FAFC"} // Lighter grey for inactive countries
-                    stroke="#cbd5e1" // Softer border color for the lighter background
+                    fill={hasData ? colorScale(views) : "rgba(255,255,255,0.02)"} 
+                    stroke="rgba(255,255,255,0.08)"
                     strokeWidth={0.5}
                     style={{
                       default: { outline: "none" },
-                      hover: { fill: hasData ? "#4F46E5" : "#F1F5F9", outline: "none" }, 
+                      hover: { fill: "rgba(255,255,255,0.12)", outline: "none" },
                       pressed: { outline: "none" },
                     }}
                   />
@@ -112,46 +146,85 @@ export default function WorldMap({ data }: Props) {
               })
             }
           </Geographies>
-          {data.map((d) => {
-             // Let's create an array of specific coordinates for major countries since auto-centroid can sometimes flip bounds on world maps
-             const countryCoords: Record<string, [number, number]> = {
-               "Sri Lanka": [80.7718, 7.8731],
-               "United Kingdom": [-3.4359, 55.3781],
-               "United States of America": [-95.7129, 37.0902],
-               "United States": [-95.7129, 37.0902],
-               "Australia": [133.7751, -25.2744],
-               "Canada": [-106.3468, 56.1304],
-               "United Arab Emirates": [53.8478, 23.4241],
-               "Saudi Arabia": [45.0792, 23.8859],
-               "Qatar": [51.1839, 25.3548],
-               "Italy": [12.5674, 41.8719],
-               "India": [78.9629, 20.5937],
-               "Maldives": [73.2207, 3.2028],
-               "Oman": [55.9233, 21.5126],
-               "Kuwait": [47.4818, 29.3117]
-             };
-             
+
+          {data.slice(0, 15).map((d) => {
              const coords = countryCoords[d.country] || countryCoords[countryNameMap[d.country] || ""];
              if (!coords || d.views <= 0) return null;
 
-             return (
-               <Marker key={d.country} coordinates={coords}>
-                 <text
-                   textAnchor="middle"
-                   y={-5}
-                   style={{ 
-                     fontFamily: "system-ui, sans-serif", 
-                     fill: "#ffffff",
-                     fontSize: "12px",
-                     fontWeight: "bold",
-                     textShadow: "0px 1px 3px rgba(0,0,0,0.8), 0px 0px 2px rgba(0,0,0,0.8)"
-                   }}
-                 >
-                   {d.views}
-                 </text>
-               </Marker>
-             );
-          })}
+             const radius = Math.max(8, radiusScale(d.views)); // Ensure minimum radius for text
+             if (radius < 2) return null;
+                          const isHovered = hoveredCountry === d.country;
+              const scaleFactor = isHovered ? 1.2 : 1.0;
+              const effectiveRadius = radius * scaleFactor;
+              
+              return (
+                <Marker 
+                  key={`bubble-${d.country}`} 
+                  coordinates={coords}
+                  onMouseEnter={() => setHoveredCountry(d.country)}
+                  onMouseLeave={() => setHoveredCountry(null)}
+                >
+                  {/* Outer Ring / Glow */}
+                  <circle
+                    r={effectiveRadius * 2.5}
+                    fill="#3B82F6"
+                    fillOpacity={isHovered ? 0.15 : 0.05}
+                    className="transition-all duration-300"
+                  />
+                  {/* Interactive Ring */}
+                  <circle
+                    r={effectiveRadius * 1.5}
+                    fill="#2563EB"
+                    fillOpacity={isHovered ? 0.25 : 0.12}
+                    className="transition-all duration-300"
+                  />
+                  {/* Main Bubble Border */}
+                  <circle
+                    r={effectiveRadius + 1.5}
+                    fill="transparent"
+                    stroke={isHovered ? "#3B82F6" : "#1D4ED8"}
+                    strokeWidth={1}
+                    strokeOpacity={isHovered ? 0.5 : 0.2}
+                    className="transition-all duration-300"
+                  />
+                  {/* Main Bubble core */}
+                  <circle
+                    r={effectiveRadius}
+                    fill={isHovered ? "#3b82f6" : "#2563EB"}
+                    fillOpacity={0.9}
+                    stroke="#FFFFFF"
+                    strokeWidth={1}
+                    strokeOpacity={0.6}
+                    className="transition-all duration-300 shadow-xl"
+                  />
+                  {/* Shine effect */}
+                  <circle
+                    r={effectiveRadius * 0.4}
+                    cx={-effectiveRadius * 0.25}
+                    cy={-effectiveRadius * 0.25}
+                    fill="#FFFFFF"
+                    fillOpacity={0.3}
+                  />
+                  
+                 {effectiveRadius >= 8 && (
+                    <text
+                      textAnchor="middle"
+                      y={effectiveRadius > 15 ? 6 : 4}
+                      style={{ 
+                        fontFamily: "Inter, sans-serif", 
+                        fill: "#FFFFFF",
+                        fontSize: `${Math.max(9, effectiveRadius / 2.2)}px`,
+                        fontWeight: "900",
+                        pointerEvents: "none",
+                        textShadow: "0px 2px 4px rgba(0,0,0,0.5)"
+                      }}
+                    >
+                      {d.views}
+                    </text>
+                 )}
+                </Marker>
+              );
+           })}
           </ZoomableGroup>
         </ComposableMap>
       </div>
