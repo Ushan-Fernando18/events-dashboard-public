@@ -36,6 +36,13 @@ export async function callbackHandler(req: Request, res: Response) {
       return
     }
 
+    // ── TEMPORARY: log the refresh token so you can copy it from Vercel logs ──
+    // Remove this line after you have saved GA4_REFRESH_TOKEN to Vercel env vars
+    if (tokens.refresh_token) {
+      console.log('🔑 GA4_REFRESH_TOKEN =', tokens.refresh_token)
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const params = new URLSearchParams({
       ga_auth_success: 'true',
       access_token: tokens.access_token,

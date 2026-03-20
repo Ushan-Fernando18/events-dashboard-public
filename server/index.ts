@@ -6,6 +6,7 @@ import { authorizeHandler } from './routes/authorize'
 import { callbackHandler } from './routes/callback'
 import { refreshHandler } from './routes/refresh'
 import { analyticsHandler } from './routes/analytics'
+import { publicStatsHandler } from './routes/publicStats'
 
 dotenv.config()
 
@@ -25,6 +26,7 @@ app.get('/api/authorize', authorizeHandler)
 app.get('/api/callback', callbackHandler)
 app.post('/api/refresh', refreshHandler)
 app.post('/api/analytics', analyticsHandler)
+app.get('/api/public-stats', publicStatsHandler)
 
 // In production, serve the built frontend
 if (process.env.NODE_ENV === 'production') {

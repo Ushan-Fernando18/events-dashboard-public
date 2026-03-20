@@ -1,33 +1,37 @@
 import { useState, useEffect } from 'react'
-import { Eye, RefreshCw } from 'lucide-react'
-import { useAnalytics, type PageType } from '../hooks/useAnalytics'
+import { Eye, RefreshCw, ShieldOff } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { useAnalytics } from '../hooks/useAnalytics'
+import { usePublicAnalytics } from '../hooks/usePublicAnalytics'
 import { formatNumber } from '../lib/formatters'
 import CountriesTable from '../components/dashboard/CountriesTable'
 import WorldMap from '../components/dashboard/WorldMap'
 
 export default function EventDashboardPage() {
-  // MANUAL OVERRIDE (when needed) 
-  // const MANUAL_ACTIVE_USERS_OVERRIDE = 5000;
- 
-  
-  const [activeTab] = useState<PageType>('virtual-events')
+  const [searchParams] = useSearchParams()
+  const accessKey = searchParams.get('access') ?? ''
+  const isPublicMode = accessKey.length > 0
+
   const [activeView, setActiveView] = useState<'standard' | 'map'>('standard')
-  
-  // Date calculation (Hardcoded to last 48 hours)
+
+  // ── Internal mode: OAuth-based analytics ──────────────────────────────────
   const getDates = () => {
     const end = new Date()
     const start = new Date()
-    start.setHours(start.getHours() - 72) // 48h data usually spans 3 calendar days in GA4 for full coverage
-    
-    const formatDate = (d: Date) => d.toISOString().split('T')[0]
-    return { startDate: formatDate(start), endDate: formatDate(end) }
+    start.setHours(start.getHours() - 72)
+    const fmt = (d: Date) => d.toISOString().split('T')[0]
+    return { startDate: fmt(start), endDate: fmt(end) }
   }
-
   const { startDate, endDate } = getDates()
-  
-  const { data, isLoading, isError, error, refetch, isFetching } = useAnalytics(
-    startDate, endDate, activeTab
-  )
+  const internalQuery = useAnalytics(startDate, endDate, 'virtual-events')
+
+  // ── Public mode: Service-Account-based analytics ──────────────────────────
+  const publicQuery = usePublicAnalytics(accessKey)
+
+  // Pick the right source
+  const { data, isLoading, isError, error, refetch, isFetching } = isPublicMode
+    ? { ...publicQuery, refetch: publicQuery.refetch, isFetching: publicQuery.isFetching }
+    : internalQuery
 
   // Live time updater
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -35,6 +39,19 @@ export default function EventDashboardPage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // ── Access Denied screen (public mode, wrong/missing key) ─────────────────
+  if (isPublicMode && isError) {
+    return (
+      <div className="h-screen w-full bg-white flex flex-col items-center justify-center gap-6">
+        <ShieldOff className="h-16 w-16 text-red-400" />
+        <h1 className="text-2xl font-black text-slate-800">Access Denied</h1>
+        <p className="text-slate-500 text-sm max-w-xs text-center">
+          The link you used is invalid or has expired. Please contact the dashboard owner for a new link.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen w-full bg-gradient-to-br from-[#002686] via-[#0540ad] via-[#0543b6] via-[#450c55] to-[#9324b1] relative selection:bg-white/20 flex flex-col overflow-hidden">

@@ -5,6 +5,7 @@ import { authorizeHandler } from '../server/routes/authorize'
 import { callbackHandler } from '../server/routes/callback'
 import { refreshHandler } from '../server/routes/refresh'
 import { analyticsHandler } from '../server/routes/analytics'
+import { publicStatsHandler } from '../server/routes/publicStats'
 
 dotenv.config()
 
@@ -21,5 +22,6 @@ app.get('/api/authorize', authorizeHandler)
 app.get('/api/callback', callbackHandler)
 app.post('/api/refresh', refreshHandler)
 app.post('/api/analytics', analyticsHandler)
+app.get('/api/public-stats', publicStatsHandler)
 
 export default app
