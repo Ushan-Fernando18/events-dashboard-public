@@ -143,17 +143,17 @@ export default function EventDashboardPage() {
             {/* Main Grid: 35% / 65% */}
             <div className="flex-1 min-h-0 relative">
               {activeView === 'standard' ? (
-                <div className="grid grid-cols-[40%_60%] gap-4 h-full w-full">
+                <div className="grid grid-cols-[35%_65%] gap-4 h-full w-full">
                   {/* Left Side - KPI & Table */}
                   <div className="flex flex-col gap-4 h-full min-h-0">
                     {/* KPI Box (Same style as Map Sidebar) */}
                     <div className="flex shrink-0">
                       <div className="w-full bg-white/95 backdrop-blur-sm border border-white/20 p-2 rounded-xl shadow-lg flex flex-col items-center justify-center transform hover:scale-[1.002] transition-all duration-300">
                         <div className="flex items-center gap-2 mb-1">
-                          <Eye className="h-4 w-4 text-blue-500" />
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Website Visitors</span>
+                          <Eye className="h-5 w-5 text-blue-500" />
+                          <span className="text-[14px] font-black text-slate-400 uppercase tracking-widest">Total Virtual Event Visitors</span>
                         </div>
-                        <span className="text-xl font-black text-slate-900 tracking-tighter tabular-nums">{formatNumber(data.kpis.pageViews)}</span>
+                        <span className="text-2xl font-black text-slate-900 tracking-tighter tabular-nums">{formatNumber(data.kpis.pageViews)}</span>
                       </div>
                     </div>
 

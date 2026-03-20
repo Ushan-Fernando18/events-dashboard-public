@@ -1,5 +1,5 @@
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, Graticule } from 'react-simple-maps';
-import { scaleSqrt } from 'd3-scale';
+import { scaleSqrt, scaleLinear } from 'd3-scale';
 import { Plus, Minus } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -47,16 +47,17 @@ export default function WorldMap({ data }: Props) {
       .range([0, 22]); // Tightened for a more professional look
   }, [maxViews]);
 
+  // Bubble color scale: light blue (low) → dark navy (high)
+  const bubbleColorScale = useMemo(() => {
+    return scaleLinear<string>()
+      .domain([0, maxViews])
+      .range(['#60a5fa', '#1e3a8a']) // blue-400 → blue-900
+      .clamp(true);
+  }, [maxViews]);
 
 
-  const dataLookup = useMemo(() => {
-    const lookup: Record<string, number> = {};
-    data.forEach((d) => {
-      const mappedName = countryNameMap[d.country] || d.country;
-      lookup[mappedName.toLowerCase()] = d.views;
-    });
-    return lookup;
-  }, [data]);
+
+
 
   const countryCoords: Record<string, [number, number]> = {
     "Sri Lanka": [80.7718, 7.8731],
@@ -88,7 +89,7 @@ export default function WorldMap({ data }: Props) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative group/map overflow-hidden">
+    <div className="w-full h-full flex flex-col relative group/map overflow-hidden bg-white rounded-2xl">
       {/* Small Zoom Controls */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-1.5 translate-x-1">
         <button
@@ -117,24 +118,20 @@ export default function WorldMap({ data }: Props) {
             center={position.coordinates}
             onMoveEnd={handleMoveEnd}
           >
-            <Graticule stroke="rgba(255,255,255,0.05)" strokeWidth={0.5} />
+            <Graticule stroke="rgba(200,200,200,0.4)" strokeWidth={0.3} />
           <Geographies geography={geoUrl}>
             {({ geographies }) =>
               geographies.map((geo) => {
-                const geoName = geo.properties.name.toLowerCase();
-                const views = dataLookup[geoName];
-                const hasData = views !== undefined && views > 0;
-                
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={hasData ? "#FFFFFF" : "rgba(255,255,255,0.02)"} 
-                    stroke="rgba(255,255,255,0.08)"
-                    strokeWidth={0.5}
+                    fill="#d1d5db"
+                    stroke="#ffffff"
+                    strokeWidth={0.6}
                     style={{
                       default: { outline: "none" },
-                      hover: { fill: "rgba(255,255,255,0.12)", outline: "none" },
+                      hover: { fill: "#b0b7c3", outline: "none" },
                       pressed: { outline: "none" },
                     }}
                   />
@@ -147,61 +144,63 @@ export default function WorldMap({ data }: Props) {
              const coords = countryCoords[d.country] || countryCoords[countryNameMap[d.country] || ""];
              if (!coords || d.views <= 0) return null;
 
-             const radius = Math.max(8, radiusScale(d.views)); // Ensure minimum radius for text
+             const radius = Math.max(8, radiusScale(d.views));
              if (radius < 2) return null;
-                          const isHovered = hoveredCountry === d.country;
-              const scaleFactor = isHovered ? 1.2 : 1.0;
-              const effectiveRadius = radius * scaleFactor;
-              
-              return (
-                <Marker 
-                  key={`bubble-${d.country}`} 
-                  coordinates={coords}
-                  onMouseEnter={() => setHoveredCountry(d.country)}
-                  onMouseLeave={() => setHoveredCountry(null)}
-                >
-                  {/* Minimal Subtle Glow with Pulse */}
-                  <circle
-                    r={effectiveRadius * 1.5}
-                    fill="#1e40af"
-                    fillOpacity={isHovered ? 0.4 : 0.25}
-                    className="animate-pulse duration-[1500ms]"
-                  />
-                  {/* Main Bubble core */}
-                  <circle
-                    r={effectiveRadius}
-                    fill={isHovered ? "#3b82f6" : "#2563EB"}
-                    fillOpacity={0.9}
-                    className="transition-all duration-300"
-                  />
-                  {/* Shine effect */}
-                  <circle
-                    r={effectiveRadius * 0.4}
-                    cx={-effectiveRadius * 0.25}
-                    cy={-effectiveRadius * 0.25}
-                    fill="#FFFFFF"
-                    fillOpacity={0.1}
-                  />
-                  
-                 {effectiveRadius >= 8 && (
-                    <text
-                      textAnchor="middle"
-                      y={effectiveRadius > 15 ? 6 : 4}
-                      style={{ 
-                        fontFamily: "Inter, sans-serif", 
-                        fill: "#FFFFFF",
-                        fontSize: `${Math.max(9, effectiveRadius / 2.2)}px`,
-                        fontWeight: "900",
-                        pointerEvents: "none",
-                        textShadow: "0px 2px 4px rgba(0,0,0,0.5)"
-                      }}
-                    >
-                      {d.views}
-                    </text>
-                 )}
-                </Marker>
-              );
-           })}
+             const isHovered = hoveredCountry === d.country;
+             const scaleFactor = isHovered ? 1.2 : 1.0;
+             const effectiveRadius = radius * scaleFactor;
+             const bubbleColor = bubbleColorScale(d.views);
+             
+             return (
+               <Marker 
+                 key={`bubble-${d.country}`} 
+                 coordinates={coords}
+                 onMouseEnter={() => setHoveredCountry(d.country)}
+                 onMouseLeave={() => setHoveredCountry(null)}
+               >
+                 {/* Outer pulse ring - uses bubble color for visual match */}
+                 <circle
+                   r={effectiveRadius * 1.8}
+                   fill={bubbleColor}
+                   fillOpacity={isHovered ? 0.45 : 0.3}
+                   className="animate-pulse"
+                   style={{ animationDuration: '1.4s' }}
+                 />
+                 {/* Main bubble */}
+                 <circle
+                   r={effectiveRadius}
+                   fill={bubbleColor}
+                   fillOpacity={0.92}
+                   className="transition-all duration-300"
+                 />
+                 {/* Shine highlight */}
+                 <circle
+                   r={effectiveRadius * 0.38}
+                   cx={-effectiveRadius * 0.22}
+                   cy={-effectiveRadius * 0.22}
+                   fill="#FFFFFF"
+                   fillOpacity={0.2}
+                 />
+                 
+                {effectiveRadius >= 8 && (
+                   <text
+                     textAnchor="middle"
+                     y={effectiveRadius > 15 ? 6 : 4}
+                     style={{ 
+                       fontFamily: "Inter, sans-serif", 
+                       fill: "#FFFFFF",
+                       fontSize: `${Math.max(9, effectiveRadius / 2.2)}px`,
+                       fontWeight: "900",
+                       pointerEvents: "none",
+                       textShadow: "0px 1px 3px rgba(0,0,0,0.6)"
+                     }}
+                   >
+                     {d.views}
+                   </text>
+                )}
+               </Marker>
+             );
+          })}
           </ZoomableGroup>
         </ComposableMap>
       </div>
