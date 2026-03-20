@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express'
+import fs from 'fs'
+import path from 'path'
 
 interface ReportRequest {
   dimensions?: { name: string }[]
@@ -77,14 +79,85 @@ function labelFilter(label: string) {
   }
 }
 
+async function getAccessTokenFromRefreshToken(refreshToken: string): Promise<string> {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      grant_type: 'refresh_token',
+    }),
+  })
+  const data = await res.json() as { access_token?: string; error?: string }
+  if (!data.access_token) throw new Error(`Token refresh failed: ${JSON.stringify(data)}`)
+  return data.access_token
+}
+
 export async function analyticsHandler(req: Request, res: Response) {
-  const { startDate, endDate, access_token, pageType } = req.body as {
-    startDate: string; endDate: string; access_token: string; pageType: 'events' | 'virtual-events'
+  const { startDate, endDate, pageType } = req.body as {
+    startDate: string; endDate: string; pageType: 'events' | 'virtual-events'
   }
 
   const propertyId = process.env.GA4_PROPERTY_ID
-  if (!propertyId) { res.status(500).json({ error: 'GA4_PROPERTY_ID not configured' }); return }
-  if (!access_token) { res.status(401).json({ needsAuth: true }); return }
+  let refreshToken = process.env.GA4_REFRESH_TOKEN
+  try {
+    const tokenPath = path.join(process.cwd(), '.ga4_token.json')
+    if (fs.existsSync(tokenPath)) {
+      const data = JSON.parse(fs.readFileSync(tokenPath, 'utf8'))
+      if (data.refresh_token) refreshToken = data.refresh_token
+    }
+  } catch (err) {}
+
+  const isMockMode = !propertyId || !refreshToken || refreshToken === 'paste-your-refresh-token-here'
+
+  if (isMockMode) {
+    // Generate mock data for visualization purposes
+    const kpis = {
+      sessions: Math.floor(Math.random() * 5000) + 10000,
+      pageViews: Math.floor(Math.random() * 15000) + 30000,
+      avgSessionDuration: Math.floor(Math.random() * 60) + 120,
+      realtimeUsers: Math.floor(Math.random() * 50) + 10,
+      totalUsers24h: Math.floor(Math.random() * 500) + 1000
+    }
+    const countries = [
+      { country: 'Sri Lanka', views: 45000, percentage: 45 },
+      { country: 'United States', views: 25000, percentage: 25 },
+      { country: 'United Kingdom', views: 15000, percentage: 15 },
+      { country: 'Australia', views: 10000, percentage: 10 },
+      { country: 'Canada', views: 5000, percentage: 5 }
+    ]
+    const cities = [
+      { city: 'Colombo', views: 30000, percentage: 30 },
+      { city: 'New York', views: 15000, percentage: 15 },
+      { city: 'London', views: 10000, percentage: 10 },
+      { city: 'Sydney', views: 8000, percentage: 8 },
+      { city: 'Toronto', views: 5000, percentage: 5 }
+    ]
+    const sources = [
+      { name: 'google', sessions: 8000 },
+      { name: '(direct)', sessions: 5000 },
+      { name: 'facebook', sessions: 3000 }
+    ]
+    const mediums = [
+      { name: 'organic', sessions: 7000 },
+      { name: '(none)', sessions: 5000 },
+      { name: 'social', sessions: 3000 }
+    ]
+    const registerNowCount = Math.floor(Math.random() * 100) + 50
+    const registerNowSources = [
+      { name: 'facebook', sessions: Math.floor(registerNowCount * 0.5) },
+      { name: 'google', sessions: Math.floor(registerNowCount * 0.3) },
+      { name: '(direct)', sessions: Math.floor(registerNowCount * 0.2) }
+    ]
+    const callNowCount = pageType === 'events' ? Math.floor(Math.random() * 50) + 20 : undefined
+
+    return res.json({ kpis, countries, cities, sources, mediums, registerNowCount, registerNowSources, callNowCount })
+  }
+
+  try {
+    const access_token = await getAccessTokenFromRefreshToken(refreshToken!)
 
   // Base filter for the events page (matches both 'event/' and 'events/')
   const isEventsPage = pageType === 'events'
@@ -101,7 +174,6 @@ export async function analyticsHandler(req: Request, res: Response) {
     
   const dateRange = { startDate, endDate }
 
-  try {
     const reports = await Promise.all([
       // 1. Main KPIs — sessions, pageViews, avgSessionDuration
       runReport(propertyId, access_token, {

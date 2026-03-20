@@ -4,7 +4,6 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { authorizeHandler } from './routes/authorize'
 import { callbackHandler } from './routes/callback'
-import { refreshHandler } from './routes/refresh'
 import { analyticsHandler } from './routes/analytics'
 import { publicStatsHandler } from './routes/publicStats'
 
@@ -24,7 +23,6 @@ app.use(express.json())
 // API routes
 app.get('/api/authorize', authorizeHandler)
 app.get('/api/callback', callbackHandler)
-app.post('/api/refresh', refreshHandler)
 app.post('/api/analytics', analyticsHandler)
 app.get('/api/public-stats', publicStatsHandler)
 

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LogOut, RefreshCw, AlertCircle, Sun, Moon, MousePointerClick, Activity, Eye, Clock, PhoneCall } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+import { RefreshCw, AlertCircle, Sun, Moon, MousePointerClick, Activity, Eye, Clock, PhoneCall } from 'lucide-react'
 import { useAnalytics, type PageType } from '../hooks/useAnalytics'
 import { formatNumber, formatDuration } from '../lib/formatters'
 import StatCard from '../components/dashboard/KpiCard'
@@ -24,7 +23,6 @@ function useTheme() {
 }
 
 export default function DashboardPage() {
-  const { logout } = useAuth()
   const { dark, toggle } = useTheme()
   const [activeTab, setActiveTab] = useState<PageType>('events')
   const [dateRange, setDateRange] = useState<DateRange>(PRESETS[2])
@@ -61,11 +59,6 @@ export default function DashboardPage() {
             <button onClick={toggle}
               className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors" title="Toggle theme">
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <button onClick={logout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </div>

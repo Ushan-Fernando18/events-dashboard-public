@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Eye, RefreshCw, ShieldOff } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { Eye, RefreshCw } from 'lucide-react'
 import { useAnalytics } from '../hooks/useAnalytics'
-import { usePublicAnalytics } from '../hooks/usePublicAnalytics'
 import { formatNumber } from '../lib/formatters'
 import CountriesTable from '../components/dashboard/CountriesTable'
 import WorldMap from '../components/dashboard/WorldMap'
 
 export default function EventDashboardPage() {
-  const [searchParams] = useSearchParams()
-  const accessKey = searchParams.get('access') ?? ''
-  const isPublicMode = accessKey.length > 0
-
   const [activeView, setActiveView] = useState<'standard' | 'map'>('standard')
 
   // ── Internal mode: OAuth-based analytics ──────────────────────────────────
@@ -23,15 +17,7 @@ export default function EventDashboardPage() {
     return { startDate: fmt(start), endDate: fmt(end) }
   }
   const { startDate, endDate } = getDates()
-  const internalQuery = useAnalytics(startDate, endDate, 'virtual-events')
-
-  // ── Public mode: Service-Account-based analytics ──────────────────────────
-  const publicQuery = usePublicAnalytics(accessKey)
-
-  // Pick the right source
-  const { data, isLoading, isError, error, refetch, isFetching } = isPublicMode
-    ? { ...publicQuery, refetch: publicQuery.refetch, isFetching: publicQuery.isFetching }
-    : internalQuery
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalytics(startDate, endDate, 'virtual-events')
 
   // Live time updater
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -40,18 +26,7 @@ export default function EventDashboardPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // ── Access Denied screen (public mode, wrong/missing key) ─────────────────
-  if (isPublicMode && isError) {
-    return (
-      <div className="h-screen w-full bg-white flex flex-col items-center justify-center gap-6">
-        <ShieldOff className="h-16 w-16 text-red-400" />
-        <h1 className="text-2xl font-black text-slate-800">Access Denied</h1>
-        <p className="text-slate-500 text-sm max-w-xs text-center">
-          The link you used is invalid or has expired. Please contact the dashboard owner for a new link.
-        </p>
-      </div>
-    )
-  }
+
 
   return (
     <div className="h-screen w-full bg-gradient-to-br from-[#002686] via-[#0540ad] via-[#0543b6] via-[#450c55] to-[#9324b1] relative selection:bg-white/20 flex flex-col overflow-hidden">
