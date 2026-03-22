@@ -12,12 +12,12 @@ export default function EventDashboardPage() {
   const getDates = () => {
     const end = new Date()
     const start = new Date()
-    start.setHours(start.getHours() - 72)
+    start.setHours(start.getHours() - 24)
     const fmt = (d: Date) => d.toISOString().split('T')[0]
     return { startDate: fmt(start), endDate: fmt(end) }
   }
   const { startDate, endDate } = getDates()
-  const { data, isLoading, isError, error, refetch, isFetching } = useAnalytics(startDate, endDate, 'virtual-events')
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalytics(startDate, endDate, 'event-dashboard')
 
   // Live time updater
   const [currentTime, setCurrentTime] = useState(new Date())

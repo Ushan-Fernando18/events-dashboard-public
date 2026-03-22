@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-export type PageType = 'events' | 'virtual-events'
+export type PageType = 'events' | 'virtual-events' | 'event-dashboard'
 
 export interface AnalyticsData {
   kpis: { 

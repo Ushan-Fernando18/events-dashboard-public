@@ -97,7 +97,7 @@ async function getAccessTokenFromRefreshToken(refreshToken: string): Promise<str
 
 export async function analyticsHandler(req: Request, res: Response) {
   const { startDate, endDate, pageType } = req.body as {
-    startDate: string; endDate: string; pageType: 'events' | 'virtual-events'
+    startDate: string; endDate: string; pageType: 'events' | 'virtual-events' | 'event-dashboard'
   }
 
   const propertyId = process.env.GA4_PROPERTY_ID
@@ -170,14 +170,22 @@ export async function analyticsHandler(req: Request, res: Response) {
           ]
         }
       }
-    : pageFilter('/events-virtual')
+    : pageType === 'event-dashboard'
+      ? {
+          filter: {
+            fieldName: 'pagePathPlusQueryString',
+            stringFilter: { matchType: 'CONTAINS', value: 'events', caseSensitive: false },
+          },
+        }
+      : pageFilter('/events-virtual')
     
   const dateRange = { startDate, endDate }
 
     const reports = await Promise.all([
       // 1. Main KPIs — sessions, pageViews, avgSessionDuration
       runReport(propertyId, access_token, {
-        metrics: [
+        dimensions: pageType === 'event-dashboard' ? [{ name: 'pagePathPlusQueryString' }] : undefined,
+        metrics: pageType === 'event-dashboard' ? [{ name: 'screenPageViews' }] : [
           { name: 'sessions' },
           { name: 'screenPageViews' },
           { name: 'averageSessionDuration' },
@@ -187,10 +195,10 @@ export async function analyticsHandler(req: Request, res: Response) {
       }),
       // 2. Countries — views (screenPageViews)
       runReport(propertyId, access_token, {
-        dimensions: [{ name: 'country' }],
+        dimensions: pageType === 'event-dashboard' ? [{ name: 'country' }, { name: 'pagePathPlusQueryString' }] : [{ name: 'country' }],
         metrics: [{ name: 'screenPageViews' }],
         dateRanges: [dateRange],
-        limit: 15,
+        limit: pageType === 'event-dashboard' ? 10000 : 15,
         dimensionFilter: pFilter,
       }),
       // 3. Cities
@@ -281,23 +289,54 @@ export async function analyticsHandler(req: Request, res: Response) {
     const realtimeUsers = Number(realtime.rows?.[0]?.metricValues?.[0]?.value || 0)
 
     // KPIs
-    const kpiRow = mainMetrics.rows?.[0]?.metricValues || []
+    let kpiSessions = 0
+    let kpiPageViews = 0
+    let kpiAvgDuration = 0
+
+    if (pageType === 'event-dashboard') {
+      kpiPageViews = (mainMetrics.rows || []).reduce((sum, row) => sum + Number(row.metricValues?.[0]?.value || 0), 0)
+    } else {
+      const kpiRow = mainMetrics.rows?.[0]?.metricValues || []
+      kpiSessions = Number(kpiRow[0]?.value || 0)
+      kpiPageViews = Number(kpiRow[1]?.value || 0)
+      kpiAvgDuration = Number(kpiRow[2]?.value || 0)
+    }
+
     const kpis = {
-      sessions: Number(kpiRow[0]?.value || 0),
-      pageViews: Number(kpiRow[1]?.value || 0),
-      avgSessionDuration: Number(kpiRow[2]?.value || 0),
+      sessions: kpiSessions,
+      pageViews: kpiPageViews,
+      avgSessionDuration: kpiAvgDuration,
       realtimeUsers,
       totalUsers24h
     }
 
     // Countries
-    const countryRows = parseRows(countries)
-    const totalCountryViews = countryRows.reduce((s, r) => s + r.value, 0)
-    const countryData = countryRows.map((r) => ({
-      country: r.dimension,
-      views: r.value,
-      percentage: totalCountryViews > 0 ? Math.round((r.value / totalCountryViews) * 100) : 0,
-    }))
+    let countryData = []
+    if (pageType === 'event-dashboard') {
+      const mapped = new Map<string, number>()
+      for(const row of (countries.rows || [])) {
+        const c = row.dimensionValues?.[0]?.value || ''
+        const v = Number(row.metricValues?.[0]?.value || 0)
+        mapped.set(c, (mapped.get(c) || 0) + v)
+      }
+      const countryRows = Array.from(mapped.entries()).map(([dimension, value]) => ({ dimension, value }))
+      countryRows.sort((a,b) => b.value - a.value)
+      const topRows = countryRows.slice(0, 15)
+      const totalCountryViews = topRows.reduce((sum, r) => sum + r.value, 0)
+      countryData = topRows.map(r => ({
+        country: r.dimension,
+        views: r.value,
+        percentage: totalCountryViews > 0 ? Math.round((r.value / totalCountryViews) * 100) : 0,
+      }))
+    } else {
+      const countryRows = parseRows(countries)
+      const totalCountryViews = countryRows.reduce((s, r) => s + r.value, 0)
+      countryData = countryRows.map((r) => ({
+        country: r.dimension,
+        views: r.value,
+        percentage: totalCountryViews > 0 ? Math.round((r.value / totalCountryViews) * 100) : 0,
+      }))
+    }
 
     // Cities
     const cityRows = parseRows(cities)
